@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+
+  config-service:
+    image: kbastani/config-service
+    ports:
+      - '8888:8888'
+    environment:
+      - DOCKER_IP=192.168.99.100
+
+  hystrix-dashboard:
+    image: kbastani/hystrix-dashboard
+    environment:
+      - DOCKER_IP=192.168.99.100
+    ports:
+      - '6161:6161'
+
+  discovery-service:
+    image: springcloud/eureka
+    ports:
+      - '8761:8761'
+    depends_on:
+      - config-service
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    depends_on:
+      - discovery-service
+      - config-service
+    environment:
+      - MYSQL_ROOT_PASSWORD=dbpass
+      - MYSQL_DATABASE=dev
+      
+  user-service:
+    build: ./
+    ports:
+      - '8181:8181'
+    depends_on:
+      - mysql
+      - discovery-service
+      - config-service
+    environment:
+      - DOCKER_IP=192.168.99.100
